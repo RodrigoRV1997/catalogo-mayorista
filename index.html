@@ -128,8 +128,8 @@
 
     .item {
       display: grid;
-      grid-template-columns: 92px 1fr;
-      gap: 12px;
+      grid-template-columns: 128px 1fr;
+      gap: 14px;
       padding: 14px;
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -137,7 +137,7 @@
     }
 
     .photo {
-      width: 92px;
+      width: 128px;
       aspect-ratio: 1 / 1;
       overflow: hidden;
       border: 1px solid var(--line);
@@ -239,8 +239,8 @@
     }
 
     .thumb {
-      width: 58px;
-      height: 58px;
+      width: 76px;
+      height: 76px;
       overflow: hidden;
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -295,11 +295,22 @@
 
     @media (max-width: 390px) {
       .item {
-        grid-template-columns: 78px 1fr;
+        grid-template-columns: 112px 1fr;
       }
 
       .photo {
-        width: 78px;
+        width: 112px;
+      }
+    }
+
+    @media (max-width: 340px) {
+      .item {
+        grid-template-columns: 1fr;
+      }
+
+      .photo {
+        width: 100%;
+        max-width: 220px;
       }
     }
   </style>
