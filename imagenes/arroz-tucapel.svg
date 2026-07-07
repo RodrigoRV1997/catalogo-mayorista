@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-label="Arroz Tucapel">
+  <rect width="640" height="420" fill="#fff7ed"/>
+  <path d="M190 88h260l36 270H154z" fill="#ffffff" stroke="#92400e" stroke-width="8"/>
+  <path d="M214 128h212l18 132H196z" fill="#fed7aa"/>
+  <g fill="#92400e">
+    <ellipse cx="244" cy="286" rx="7" ry="18" transform="rotate(62 244 286)"/>
+    <ellipse cx="286" cy="302" rx="7" ry="18" transform="rotate(70 286 302)"/>
+    <ellipse cx="328" cy="286" rx="7" ry="18" transform="rotate(58 328 286)"/>
+    <ellipse cx="370" cy="306" rx="7" ry="18" transform="rotate(67 370 306)"/>
+    <ellipse cx="410" cy="286" rx="7" ry="18" transform="rotate(58 410 286)"/>
+  </g>
+  <text x="320" y="196" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700" fill="#92400e">ARROZ</text>
+  <text x="320" y="374" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" fill="#7c2d12">TUCAPEL</text>
+</svg>

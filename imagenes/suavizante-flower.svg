@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-label="Suavizante flower">
+  <rect width="640" height="420" fill="#fdf2f8"/>
+  <path d="M220 82h200l34 246c4 28-18 52-46 52H232c-28 0-50-24-46-52z" fill="#ffffff" stroke="#be185d" stroke-width="8"/>
+  <path d="M230 156h180l22 124H208z" fill="#f9a8d4"/>
+  <circle cx="320" cy="222" r="24" fill="#be185d"/>
+  <g fill="#fdf2f8">
+    <ellipse cx="320" cy="178" rx="18" ry="34"/>
+    <ellipse cx="320" cy="266" rx="18" ry="34"/>
+    <ellipse cx="276" cy="222" rx="34" ry="18"/>
+    <ellipse cx="364" cy="222" rx="34" ry="18"/>
+  </g>
+  <text x="320" y="332" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700" fill="#be185d">SWEENS</text>
+</svg>
