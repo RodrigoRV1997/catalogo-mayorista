@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Catalogo mayorista</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --surface: #ffffff;
+      --surface-2: #eef7f5;
+      --text: #18202b;
+      --muted: #64748b;
+      --line: #d7dee8;
+      --accent: #0f766e;
+      --accent-2: #155e75;
+      --warn: #92400e;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+    }
+
+    header {
+      background: #18202b;
+      color: #ffffff;
+    }
+
+    .wrap {
+      width: min(1120px, calc(100% - 28px));
+      margin: 0 auto;
+    }
+
+    .top {
+      display: grid;
+      gap: 6px;
+      padding: 18px 0 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .status {
+      color: #cbd5e1;
+      font-size: 14px;
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      border-bottom: 1px solid var(--line);
+      background: rgba(245, 247, 250, .95);
+      backdrop-filter: blur(8px);
+    }
+
+    .toolbar-inner {
+      display: grid;
+      gap: 10px;
+      padding: 12px 0;
+    }
+
+    input,
+    select,
+    button {
+      min-height: 42px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--text);
+      font: inherit;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 0 12px;
+    }
+
+    button {
+      padding: 0 14px;
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #ffffff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    main {
+      padding: 16px 0 26px;
+    }
+
+    .summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .badge {
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      color: #334155;
+      font-weight: 700;
+    }
+
+    .cards {
+      display: grid;
+      gap: 10px;
+    }
+
+    .item {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+
+    .brand {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      color: var(--accent);
+    }
+
+    .product {
+      margin-top: 3px;
+      font-size: 17px;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .meta,
+    .prices {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .pill {
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #334155;
+      font-size: 13px;
+    }
+
+    .price {
+      min-width: 130px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: #064e3b;
+      font-weight: 800;
+    }
+
+    .price span {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 11px;
+      color: #047857;
+      text-transform: uppercase;
+    }
+
+    .table-wrap {
+      display: none;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+
+    table {
+      width: 100%;
+      min-width: 860px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 13px;
+    }
+
+    td:nth-child(2) {
+      white-space: normal;
+      min-width: 280px;
+    }
+
+    td.num,
+    th.num {
+      text-align: right;
+    }
+
+    .empty,
+    .error {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--muted);
+    }
+
+    .error {
+      border-color: #fed7aa;
+      background: #fff7ed;
+      color: var(--warn);
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    @media (min-width: 720px) {
+      .toolbar-inner {
+        grid-template-columns: 1fr 240px auto;
+        align-items: center;
+      }
+
+      .cards {
+        display: none;
+      }
+
+      .table-wrap {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap top">
+      <h1 id="companyName">Catalogo mayorista</h1>
+      <div class="status" id="status">Cargando precios...</div>
+    </div>
+  </header>
+
+  <section class="toolbar">
+    <div class="wrap toolbar-inner">
+      <input id="search" type="search" autocomplete="off" placeholder="Buscar marca o producto">
+      <select id="brandFilter" aria-label="Filtrar por marca">
+        <option value="">Todas las marcas</option>
+      </select>
+      <button id="refresh" type="button">Actualizar</button>
+    </div>
+  </section>
+
+  <main class="wrap">
+    <div class="summary">
+      <span class="badge" id="count">0 productos</span>
+      <span id="lastLoaded"></span>
+    </div>
+
+    <section id="cards" class="cards"></section>
+
+    <section class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Marca</th>
+            <th>Producto</th>
+            <th>Gramaje</th>
+            <th>Envase</th>
+            <th class="num">UND X CAJA</th>
+            <th class="num">Valor Unit.</th>
+            <th class="num">Total</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </section>
+
+    <div id="empty" class="empty" hidden>No hay productos para mostrar.</div>
+    <div id="error" class="error" hidden></div>
+  </main>
+
+  <script>
+    const CONFIG = {
+      companyName: "Catalogo mayorista",
+
+      // Cambia esta linea por la URL CSV publicada desde Google Sheets.
+      // Ejemplo: "https://docs.google.com/spreadsheets/d/e/XXXX/pub?gid=0&single=true&output=csv"
+      sheetCsvUrl: "productos_demo.csv",
+    };
+
+    const moneyFormatter = new Intl.NumberFormat("es-CL", {
+      style: "currency",
+      currency: "CLP",
+      maximumFractionDigits: 0,
+    });
+
+    const state = {
+      products: [],
+      filtered: [],
+    };
+
+    const elements = {
+      companyName: document.querySelector("#companyName"),
+      status: document.querySelector("#status"),
+      search: document.querySelector("#search"),
+      brandFilter: document.querySelector("#brandFilter"),
+      refresh: document.querySelector("#refresh"),
+      count: document.querySelector("#count"),
+      lastLoaded: document.querySelector("#lastLoaded"),
+      cards: document.querySelector("#cards"),
+      tableBody: document.querySelector("#tableBody"),
+      empty: document.querySelector("#empty"),
+      error: document.querySelector("#error"),
+    };
+
+    elements.companyName.textContent = CONFIG.companyName;
+
+    function parseCsv(text) {
+      const rows = [];
+      let row = [];
+      let value = "";
+      let insideQuotes = false;
+
+      for (let i = 0; i < text.length; i += 1) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (char === '"' && insideQuotes && next === '"') {
+          value += '"';
+          i += 1;
+        } else if (char === '"') {
+          insideQuotes = !insideQuotes;
+        } else if (char === "," && !insideQuotes) {
+          row.push(value);
+          value = "";
+        } else if ((char === "\n" || char === "\r") && !insideQuotes) {
+          if (char === "\r" && next === "\n") i += 1;
+          row.push(value);
+          rows.push(row);
+          row = [];
+          value = "";
+        } else {
+          value += char;
+        }
+      }
+
+      if (value || row.length) {
+        row.push(value);
+        rows.push(row);
+      }
+
+      return rows.filter((csvRow) => csvRow.some((cell) => cell.trim()));
+    }
+
+    function normalizeHeader(header) {
+      return header
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]/g, "");
+    }
+
+    function getValue(record, aliases) {
+      for (const alias of aliases) {
+        const key = Object.keys(record).find((candidate) => normalizeHeader(candidate) === normalizeHeader(alias));
+        if (key) return record[key].trim();
+      }
+      return "";
+    }
+
+    function parseNumber(value) {
+      if (typeof value === "number") return value;
+      const clean = String(value || "")
+        .replace(/\$/g, "")
+        .replace(/\s/g, "")
+        .replace(/\./g, "")
+        .replace(/,/g, ".");
+      const number = Number(clean);
+      return Number.isFinite(number) ? number : 0;
+    }
+
+    function toProducts(csvText) {
+      const rows = parseCsv(csvText);
+      const headers = rows.shift() || [];
+
+      return rows.map((row) => {
+        const record = Object.fromEntries(headers.map((header, index) => [header, row[index] || ""]));
+        const units = parseNumber(getValue(record, ["UND X CAJA", "Unidades", "Unidades por caja"]));
+        const unitPrice = parseNumber(getValue(record, ["Valor Unit.", "Valor Unitario", "Precio Unitario"]));
+        const explicitTotal = parseNumber(getValue(record, ["Total", "Total Caja", "Valor Caja"]));
+        const total = explicitTotal || units * unitPrice;
+
+        return {
+          brand: getValue(record, ["Marca"]),
+          product: getValue(record, ["Producto", "Descripcion", "Descripcion Producto"]),
+          size: getValue(record, ["Gramaje", "Formato", "Medida"]),
+          packageType: getValue(record, ["Envase"]),
+          units,
+          unitPrice,
+          total,
+        };
+      }).filter((product) => product.brand || product.product);
+    }
+
+    function renderBrandFilter(products) {
+      const selected = elements.brandFilter.value;
+      const brands = [...new Set(products.map((product) => product.brand).filter(Boolean))].sort();
+      elements.brandFilter.innerHTML = '<option value="">Todas las marcas</option>';
+      brands.forEach((brand) => {
+        const option = document.createElement("option");
+        option.value = brand;
+        option.textContent = brand;
+        elements.brandFilter.append(option);
+      });
+      elements.brandFilter.value = brands.includes(selected) ? selected : "";
+    }
+
+    function productMatches(product) {
+      const query = elements.search.value.trim().toLowerCase();
+      const brand = elements.brandFilter.value;
+      const searchable = [
+        product.brand,
+        product.product,
+        product.size,
+        product.packageType,
+      ].join(" ").toLowerCase();
+
+      return (!query || searchable.includes(query)) && (!brand || product.brand === brand);
+    }
+
+    function productCard(product) {
+      const article = document.createElement("article");
+      article.className = "item";
+      article.innerHTML = `
+        <div>
+          <div class="brand">${escapeHtml(product.brand)}</div>
+          <div class="product">${escapeHtml(product.product)}</div>
+          <div class="meta">
+            ${pill(product.size)}
+            ${pill(product.packageType)}
+            ${pill(`${product.units || 0} unid.`)}
+          </div>
+        </div>
+        <div class="prices">
+          <div class="price"><span>Valor unit.</span>${formatMoney(product.unitPrice)}</div>
+          <div class="price"><span>Total caja</span>${formatMoney(product.total)}</div>
+        </div>
+      `;
+      return article;
+    }
+
+    function productRow(product) {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${escapeHtml(product.brand)}</td>
+        <td>${escapeHtml(product.product)}</td>
+        <td>${escapeHtml(product.size)}</td>
+        <td>${escapeHtml(product.packageType)}</td>
+        <td class="num">${product.units || ""}</td>
+        <td class="num">${formatMoney(product.unitPrice)}</td>
+        <td class="num">${formatMoney(product.total)}</td>
+      `;
+      return row;
+    }
+
+    function pill(text) {
+      return text ? `<span class="pill">${escapeHtml(text)}</span>` : "";
+    }
+
+    function formatMoney(value) {
+      return value ? moneyFormatter.format(value) : "-";
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function renderProducts() {
+      state.filtered = state.products.filter(productMatches);
+      elements.cards.replaceChildren(...state.filtered.map(productCard));
+      elements.tableBody.replaceChildren(...state.filtered.map(productRow));
+
+      elements.count.textContent = `${state.filtered.length} producto${state.filtered.length === 1 ? "" : "s"}`;
+      elements.empty.hidden = state.filtered.length > 0;
+    }
+
+    async function loadProducts() {
+      elements.error.hidden = true;
+      elements.status.textContent = "Cargando precios...";
+
+      try {
+        const separator = CONFIG.sheetCsvUrl.includes("?") ? "&" : "?";
+        const url = `${CONFIG.sheetCsvUrl}${separator}_=${Date.now()}`;
+        const response = await fetch(url, { cache: "no-store" });
+        if (!response.ok) throw new Error(`No se pudo leer la planilla (${response.status}).`);
+
+        const csvText = await response.text();
+        state.products = toProducts(csvText);
+        renderBrandFilter(state.products);
+        renderProducts();
+
+        const now = new Date();
+        elements.status.textContent = "Precios cargados desde la planilla";
+        elements.lastLoaded.textContent = `Ultima carga: ${now.toLocaleString("es-CL")}`;
+      } catch (error) {
+        elements.status.textContent = "No se pudieron cargar los precios";
+        elements.error.textContent = "Revisa que la URL CSV de Google Sheets este publicada y accesible.";
+        elements.error.hidden = false;
+        elements.empty.hidden = true;
+        console.error(error);
+      }
+    }
+
+    elements.search.addEventListener("input", renderProducts);
+    elements.brandFilter.addEventListener("change", renderProducts);
+    elements.refresh.addEventListener("click", loadProducts);
+
+    loadProducts();
+  </script>
+</body>
+</html>
