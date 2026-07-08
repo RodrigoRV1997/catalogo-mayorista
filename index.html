@@ -8,12 +8,12 @@
     :root {
       --bg: #f5f7fa;
       --surface: #ffffff;
-      --surface-2: #eef7f5;
+      --surface-2: #eef6ff;
       --text: #18202b;
       --muted: #64748b;
       --line: #d7dee8;
-      --accent: #0f766e;
-      --accent-2: #155e75;
+      --accent: #075fae;
+      --accent-2: #e11d2e;
       --warn: #92400e;
       font-family: Arial, Helvetica, sans-serif;
       color: var(--text);
@@ -31,8 +31,9 @@
     }
 
     header {
-      background: #18202b;
+      background: #075fae;
       color: #ffffff;
+      border-bottom: 5px solid var(--accent-2);
     }
 
     .wrap {
@@ -42,20 +43,39 @@
 
     .top {
       display: grid;
-      gap: 6px;
-      padding: 18px 0 16px;
+      grid-template-columns: 76px 1fr;
+      gap: 14px;
+      align-items: center;
+      padding: 14px 0;
+    }
+
+    .brand-logo {
+      width: 76px;
+      height: 76px;
+      border: 3px solid rgba(255, 255, 255, .9);
+      border-radius: 50%;
+      background: #ffffff;
+      object-fit: cover;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, .18);
     }
 
     h1 {
       margin: 0;
-      font-size: 26px;
+      font-size: 28px;
       line-height: 1.15;
       letter-spacing: 0;
     }
 
     .status {
-      color: #cbd5e1;
+      color: #dbeafe;
       font-size: 14px;
+    }
+
+    .address {
+      margin-top: 4px;
+      color: #ffffff;
+      font-size: 14px;
+      line-height: 1.35;
     }
 
     .toolbar {
@@ -163,6 +183,13 @@
       color: var(--accent);
     }
 
+    .code {
+      margin-bottom: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
     .product {
       margin-top: 3px;
       font-size: 17px;
@@ -190,7 +217,7 @@
       padding: 8px 10px;
       border-radius: 8px;
       background: var(--surface-2);
-      color: #064e3b;
+      color: #034c8c;
       font-weight: 800;
     }
 
@@ -198,7 +225,7 @@
       display: block;
       margin-bottom: 2px;
       font-size: 11px;
-      color: #047857;
+      color: #075fae;
       text-transform: uppercase;
     }
 
@@ -212,7 +239,7 @@
 
     table {
       width: 100%;
-      min-width: 940px;
+      min-width: 1120px;
       border-collapse: collapse;
     }
 
@@ -274,13 +301,23 @@
       color: var(--warn);
     }
 
+    .load-more-row {
+      display: flex;
+      justify-content: center;
+      margin-top: 14px;
+    }
+
+    #loadMore {
+      min-width: 190px;
+    }
+
     [hidden] {
       display: none !important;
     }
 
     @media (min-width: 720px) {
       .toolbar-inner {
-        grid-template-columns: 1fr 240px auto;
+        grid-template-columns: 1fr 220px auto;
         align-items: center;
       }
 
@@ -294,6 +331,19 @@
     }
 
     @media (max-width: 390px) {
+      .top {
+        grid-template-columns: 64px 1fr;
+      }
+
+      .brand-logo {
+        width: 64px;
+        height: 64px;
+      }
+
+      h1 {
+        font-size: 23px;
+      }
+
       .item {
         grid-template-columns: 112px 1fr;
       }
@@ -318,8 +368,12 @@
 <body>
   <header>
     <div class="wrap top">
-      <h1 id="companyName">Catalogo mayorista</h1>
-      <div class="status" id="status">Cargando precios...</div>
+      <img class="brand-logo" id="brandLogo" src="imagenes/logo-family-market.jpg" alt="Family Market">
+      <div>
+        <h1 id="companyName">Family Market</h1>
+        <div class="address" id="address">Caletera General Velasquez, ex-avenida central 3275, Cerrillos</div>
+        <div class="status" id="status">Cargando precios...</div>
+      </div>
     </div>
   </header>
 
@@ -348,7 +402,6 @@
             <th>Foto</th>
             <th>Marca</th>
             <th>Producto</th>
-            <th>Gramaje</th>
             <th>Envase</th>
             <th class="num">UND X CAJA</th>
             <th class="num">Valor Unit.</th>
@@ -359,18 +412,24 @@
       </table>
     </section>
 
+    <div class="load-more-row">
+      <button id="loadMore" type="button" hidden>Mostrar mas</button>
+    </div>
+
     <div id="empty" class="empty" hidden>No hay productos para mostrar.</div>
     <div id="error" class="error" hidden></div>
   </main>
 
   <script>
     const CONFIG = {
-      companyName: "Catalogo mayorista",
+      companyName: "Family Market",
+      address: "Caletera General Velasquez, ex-avenida central 3275, Cerrillos",
+      logo: "imagenes/logo-family-market.jpg",
       placeholderImage: "imagenes/sin-foto.svg",
 
       // Cambia esta linea por la URL CSV publicada desde Google Sheets.
       // Ejemplo: "https://docs.google.com/spreadsheets/d/e/XXXX/pub?gid=0&single=true&output=csv"
-      sheetCsvUrl: "productos_demo.csv",
+      sheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3t897L-o3gpHqKtGrGX2cbjvaKqq7NuDboTVR4GUzr1F-S0WobFQlD77zL1st0LORhEVvhlpZWcgf/pub?output=csv",
     };
 
     const moneyFormatter = new Intl.NumberFormat("es-CL", {
@@ -382,10 +441,13 @@
     const state = {
       products: [],
       filtered: [],
+      visibleCount: 80,
     };
 
     const elements = {
       companyName: document.querySelector("#companyName"),
+      brandLogo: document.querySelector("#brandLogo"),
+      address: document.querySelector("#address"),
       status: document.querySelector("#status"),
       search: document.querySelector("#search"),
       brandFilter: document.querySelector("#brandFilter"),
@@ -394,11 +456,14 @@
       lastLoaded: document.querySelector("#lastLoaded"),
       cards: document.querySelector("#cards"),
       tableBody: document.querySelector("#tableBody"),
+      loadMore: document.querySelector("#loadMore"),
       empty: document.querySelector("#empty"),
       error: document.querySelector("#error"),
     };
 
     elements.companyName.textContent = CONFIG.companyName;
+    elements.brandLogo.src = CONFIG.logo;
+    elements.address.textContent = CONFIG.address;
 
     function parseCsv(text) {
       const rows = [];
@@ -470,18 +535,19 @@
 
       return rows.map((row) => {
         const record = Object.fromEntries(headers.map((header, index) => [header, row[index] || ""]));
-        const units = parseNumber(getValue(record, ["UND X CAJA", "Unidades", "Unidades por caja"]));
-        const unitPrice = parseNumber(getValue(record, ["Valor Unit.", "Valor Unitario", "Precio Unitario"]));
-        const explicitTotal = parseNumber(getValue(record, ["Total", "Total Caja", "Valor Caja"]));
-        const total = explicitTotal || units * unitPrice;
+        const unitLabel = getValue(record, ["UNIDAD", "UND X CAJA", "Unidades", "Unidades por caja"]);
+        const unitCount = parseNumber(unitLabel);
+        const unitPrice = parseNumber(getValue(record, ["P. UNIT.", "$ UNITARIO", "Valor Unit.", "Valor Unitario", "Precio Unitario"]));
+        const explicitTotal = parseNumber(getValue(record, ["P.CAJA", "$ X CAJA", "Total", "Total Caja", "Valor Caja"]));
+        const total = explicitTotal || (unitCount ? unitCount * unitPrice : unitPrice);
 
         return {
-          brand: getValue(record, ["Marca"]),
-          product: getValue(record, ["Producto", "Descripcion", "Descripcion Producto"]),
-          size: getValue(record, ["Gramaje", "Formato", "Medida"]),
-          packageType: getValue(record, ["Envase"]),
+          code: getValue(record, ["Codigo", "CODIGO", "COD"]),
+          brand: getValue(record, ["MARCA", "Marca"]),
+          product: getValue(record, ["NOMBRE", "Producto", "Descripcion", "Descripcion Producto"]),
+          packageType: getValue(record, ["ENVASE", "Envase"]),
           image: getValue(record, ["Imagen", "Foto", "URL Imagen", "URL Foto", "Image"]),
-          units,
+          unitLabel,
           unitPrice,
           total,
         };
@@ -505,10 +571,11 @@
       const query = elements.search.value.trim().toLowerCase();
       const brand = elements.brandFilter.value;
       const searchable = [
+        product.code,
         product.brand,
         product.product,
-        product.size,
         product.packageType,
+        product.unitLabel,
       ].join(" ").toLowerCase();
 
       return (!query || searchable.includes(query)) && (!brand || product.brand === brand);
@@ -523,12 +590,12 @@
         </div>
         <div class="item-main">
           <div>
+            ${product.code ? `<div class="code">Cod. ${escapeHtml(product.code)}</div>` : ""}
             <div class="brand">${escapeHtml(product.brand)}</div>
             <div class="product">${escapeHtml(product.product)}</div>
             <div class="meta">
-              ${pill(product.size)}
               ${pill(product.packageType)}
-              ${pill(`${product.units || 0} unid.`)}
+              ${pill(product.unitLabel)}
             </div>
           </div>
           <div class="prices">
@@ -546,9 +613,8 @@
         <td><div class="thumb"><img src="${escapeAttribute(imageSource(product))}" alt="${escapeAttribute(product.product || "Producto")}" loading="lazy" onerror="this.onerror=null;this.src='${escapeAttribute(CONFIG.placeholderImage)}';"></div></td>
         <td>${escapeHtml(product.brand)}</td>
         <td>${escapeHtml(product.product)}</td>
-        <td>${escapeHtml(product.size)}</td>
         <td>${escapeHtml(product.packageType)}</td>
-        <td class="num">${product.units || ""}</td>
+        <td class="num">${escapeHtml(product.unitLabel)}</td>
         <td class="num">${formatMoney(product.unitPrice)}</td>
         <td class="num">${formatMoney(product.total)}</td>
       `;
@@ -582,10 +648,12 @@
 
     function renderProducts() {
       state.filtered = state.products.filter(productMatches);
-      elements.cards.replaceChildren(...state.filtered.map(productCard));
-      elements.tableBody.replaceChildren(...state.filtered.map(productRow));
+      const visibleProducts = state.filtered.slice(0, state.visibleCount);
+      elements.cards.replaceChildren(...visibleProducts.map(productCard));
+      elements.tableBody.replaceChildren(...visibleProducts.map(productRow));
 
-      elements.count.textContent = `${state.filtered.length} producto${state.filtered.length === 1 ? "" : "s"}`;
+      elements.count.textContent = `${visibleProducts.length} de ${state.filtered.length} producto${state.filtered.length === 1 ? "" : "s"}`;
+      elements.loadMore.hidden = visibleProducts.length >= state.filtered.length;
       elements.empty.hidden = state.filtered.length > 0;
     }
 
@@ -601,6 +669,7 @@
 
         const csvText = await response.text();
         state.products = toProducts(csvText);
+        state.visibleCount = 80;
         renderBrandFilter(state.products);
         renderProducts();
 
@@ -616,9 +685,19 @@
       }
     }
 
-    elements.search.addEventListener("input", renderProducts);
-    elements.brandFilter.addEventListener("change", renderProducts);
+    elements.search.addEventListener("input", () => {
+      state.visibleCount = 80;
+      renderProducts();
+    });
+    elements.brandFilter.addEventListener("change", () => {
+      state.visibleCount = 80;
+      renderProducts();
+    });
     elements.refresh.addEventListener("click", loadProducts);
+    elements.loadMore.addEventListener("click", () => {
+      state.visibleCount += 80;
+      renderProducts();
+    });
 
     loadProducts();
   </script>
