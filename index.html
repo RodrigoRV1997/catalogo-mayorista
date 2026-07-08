@@ -426,28 +426,10 @@
       address: "Caletera General Velasquez, ex-avenida central 3275, Cerrillos",
       logo: "imagenes/logo-family-market.png",
       placeholderImage: "imagenes/sin-foto.svg",
-      productImageCodes: [
-        "3706",
-        "1347",
-        "13124",
-        "202",
-        "208",
-        "203",
-        "207",
-        "200",
-        "226",
-        "239",
-        "231",
-        "32131",
-        "3208",
-      ],
-
       // Cambia esta linea por la URL CSV publicada desde Google Sheets.
       // Ejemplo: "https://docs.google.com/spreadsheets/d/e/XXXX/pub?gid=0&single=true&output=csv"
       sheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3t897L-o3gpHqKtGrGX2cbjvaKqq7NuDboTVR4GUzr1F-S0WobFQlD77zL1st0LORhEVvhlpZWcgf/pub?output=csv",
     };
-
-    const productImageCodes = new Set(CONFIG.productImageCodes);
 
     const moneyFormatter = new Intl.NumberFormat("es-CL", {
       style: "currency",
@@ -648,7 +630,7 @@
     function imageSource(product) {
       const code = String(product.code || "").trim();
       if (product.image) return product.image;
-      if (code && productImageCodes.has(code)) return `imagenes/productos/${code}.jpg`;
+      if (code) return `imagenes/productos/${code}.jpg`;
       return CONFIG.placeholderImage;
     }
 
@@ -693,7 +675,7 @@
         renderProducts();
 
         const now = new Date();
-        elements.status.textContent = "Precios cargados desde la planilla";
+        elements.status.textContent = "Precios actualizados";
         elements.lastLoaded.textContent = `Ultima carga: ${now.toLocaleString("es-CL")}`;
       } catch (error) {
         elements.status.textContent = "No se pudieron cargar los precios";
