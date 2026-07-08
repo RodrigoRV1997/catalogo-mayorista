@@ -43,18 +43,18 @@
 
     .top {
       display: grid;
-      grid-template-columns: 76px 1fr;
-      gap: 14px;
+      grid-template-columns: 96px 1fr;
+      gap: 16px;
       align-items: center;
       padding: 14px 0;
     }
 
     .brand-logo {
-      width: 76px;
-      height: 76px;
-      border: 3px solid rgba(255, 255, 255, .9);
+      width: 96px;
+      height: 96px;
+      border: 2px solid rgba(255, 255, 255, .9);
       border-radius: 50%;
-      background: #ffffff;
+      background: transparent;
       object-fit: cover;
       box-shadow: 0 6px 16px rgba(0, 0, 0, .18);
     }
@@ -332,12 +332,12 @@
 
     @media (max-width: 390px) {
       .top {
-        grid-template-columns: 64px 1fr;
+        grid-template-columns: 82px 1fr;
       }
 
       .brand-logo {
-        width: 64px;
-        height: 64px;
+        width: 82px;
+        height: 82px;
       }
 
       h1 {
@@ -368,7 +368,7 @@
 <body>
   <header>
     <div class="wrap top">
-      <img class="brand-logo" id="brandLogo" src="imagenes/logo-family-market.jpg" alt="Family Market">
+      <img class="brand-logo" id="brandLogo" src="imagenes/logo-family-market.png" alt="Family Market">
       <div>
         <h1 id="companyName">Family Market</h1>
         <div class="address" id="address">Caletera General Velasquez, ex-avenida central 3275, Cerrillos</div>
@@ -424,7 +424,7 @@
     const CONFIG = {
       companyName: "Family Market",
       address: "Caletera General Velasquez, ex-avenida central 3275, Cerrillos",
-      logo: "imagenes/logo-family-market.jpg",
+      logo: "imagenes/logo-family-market.png",
       placeholderImage: "imagenes/sin-foto.svg",
 
       // Cambia esta linea por la URL CSV publicada desde Google Sheets.
