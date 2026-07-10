@@ -427,6 +427,8 @@
       logo: "imagenes/logo-family-market.png",
       placeholderImage: "imagenes/sin-foto.svg",
       assetVersion: "20260709-fotos-reales-2",
+      dataVersion: "20260710-precios",
+      priceOverridesUrl: "datos/precios-actualizados-20260710.json",
       // Cambia esta linea por la URL CSV publicada desde Google Sheets.
       // Ejemplo: "https://docs.google.com/spreadsheets/d/e/XXXX/pub?gid=0&single=true&output=csv"
       sheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3t897L-o3gpHqKtGrGX2cbjvaKqq7NuDboTVR4GUzr1F-S0WobFQlD77zL1st0LORhEVvhlpZWcgf/pub?output=csv",
@@ -639,6 +641,38 @@
       return `${path}?v=${encodeURIComponent(CONFIG.assetVersion)}`;
     }
 
+    function versionedData(path) {
+      return `${path}?v=${encodeURIComponent(CONFIG.dataVersion)}`;
+    }
+
+    async function loadPriceOverrides() {
+      if (!CONFIG.priceOverridesUrl) return {};
+
+      try {
+        const response = await fetch(versionedData(CONFIG.priceOverridesUrl), { cache: "no-store" });
+        if (!response.ok) throw new Error(`No se pudo leer precios extra (${response.status}).`);
+        const data = await response.json();
+        return data.prices || {};
+      } catch (error) {
+        console.warn("No se pudieron aplicar precios extra.", error);
+        return {};
+      }
+    }
+
+    function applyPriceOverrides(products, overrides) {
+      return products.map((product) => {
+        const code = String(product.code || "").trim();
+        const override = overrides[code];
+        if (!override) return product;
+
+        return {
+          ...product,
+          unitPrice: parseNumber(override.unitPrice),
+          total: parseNumber(override.total),
+        };
+      });
+    }
+
     function escapeHtml(value) {
       return String(value || "")
         .replace(/&/g, "&amp;")
@@ -674,7 +708,9 @@
         if (!response.ok) throw new Error(`No se pudo leer la planilla (${response.status}).`);
 
         const csvText = await response.text();
-        state.products = toProducts(csvText);
+        const products = toProducts(csvText);
+        const priceOverrides = await loadPriceOverrides();
+        state.products = applyPriceOverrides(products, priceOverrides);
         state.visibleCount = 80;
         renderBrandFilter(state.products);
         renderProducts();
