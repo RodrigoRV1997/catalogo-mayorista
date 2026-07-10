@@ -426,6 +426,7 @@
       address: "Caletera General Velasquez, ex-avenida central 3275, Cerrillos",
       logo: "imagenes/logo-family-market.png",
       placeholderImage: "imagenes/sin-foto.svg",
+      assetVersion: "20260709-fotos-reales",
       // Cambia esta linea por la URL CSV publicada desde Google Sheets.
       // Ejemplo: "https://docs.google.com/spreadsheets/d/e/XXXX/pub?gid=0&single=true&output=csv"
       sheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3t897L-o3gpHqKtGrGX2cbjvaKqq7NuDboTVR4GUzr1F-S0WobFQlD77zL1st0LORhEVvhlpZWcgf/pub?output=csv",
@@ -461,7 +462,7 @@
     };
 
     elements.companyName.textContent = CONFIG.companyName;
-    elements.brandLogo.src = CONFIG.logo;
+    elements.brandLogo.src = versionedAsset(CONFIG.logo);
     elements.address.textContent = CONFIG.address;
 
     function parseCsv(text) {
@@ -630,8 +631,12 @@
     function imageSource(product) {
       const code = String(product.code || "").trim();
       if (product.image) return product.image;
-      if (code) return `imagenes/productos/${code}.jpg`;
+      if (code) return versionedAsset(`imagenes/productos/${code}.jpg`);
       return CONFIG.placeholderImage;
+    }
+
+    function versionedAsset(path) {
+      return `${path}?v=${encodeURIComponent(CONFIG.assetVersion)}`;
     }
 
     function escapeHtml(value) {
