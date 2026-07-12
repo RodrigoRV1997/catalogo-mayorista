@@ -34,3 +34,14 @@ Si un producto no tiene foto en `imagenes/productos/`, el catalogo muestra `imag
 ## Importante
 
 Para actualizar precios y stock, basta con modificar la planilla de Google Sheets publicada. Los productos con stock 0 o precio 0 no se muestran. Para agregar fotos nuevas, sube un JPG a `imagenes/productos/` usando el codigo, el nombre normalizado o `codigo-nombre`.
+
+## Formatos detectados automaticamente
+
+El catalogo intenta leer formatos desde el nombre del producto. Ejemplos:
+
+```text
+AZUCAR IANSA 20 X 1 KG -> 20 x 1 KG
+BOLSA BASURA VIRUTEX 24ROLL 80X110 X10B -> 24 rollos · 80 x 110 · 10 bolsas/rollo
+```
+
+En bolsas de basura, medidas como `80X110` se tratan como dimensiones, no como cantidad.

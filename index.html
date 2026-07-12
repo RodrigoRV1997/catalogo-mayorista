@@ -805,7 +805,7 @@
         const family = cleanText(getValue(record, ["NOMBRE FAMILIA", "Familia", "Categoria", "Categoria Producto"]));
         const stockRaw = getValue(record, ["Stock", "STOCK", "Existencia", "Existencias", "Disponible", "Disponibles", "Saldo", "Inventario", "Cantidad Stock", "Bodega"]);
         const stock = stockRaw === "" ? null : parseNumber(stockRaw);
-        const format = inferProductFormat(productName);
+        const format = inferProductFormat(productName, family);
         const explicitUnitCount = firstPositive([
           getValue(record, ["UND X CAJA", "Unidades", "Unidades por caja"]),
           getValue(record, ["CONTENIDO", "Contenido"]),
@@ -853,8 +853,11 @@
       }));
     }
 
-    function inferProductFormat(productName) {
+    function inferProductFormat(productName, family = "") {
       const text = cleanText(productName);
+      const bagFormat = inferTrashBagFormat(text, family);
+      if (bagFormat) return bagFormat;
+
       const pattern = /(\d+(?:[.,]\d+)?)\s*x\s*(\d+(?:[.,]\d+)?)\s*(kilos?|kilo|kg|kl|k|grs?\.?|gramos?|g|gg|ml|cc|lts?\.?|lt|litros?)?/i;
       const match = text.match(pattern);
 
@@ -880,6 +883,49 @@
       }
 
       return { count: 0, label: "" };
+    }
+
+    function inferTrashBagFormat(text, family = "") {
+      const normalized = normalizeText(`${text} ${family}`);
+      const isTrashBag = normalized.includes("bolsa") && (normalized.includes("basura") || normalized.includes("bolsasdebasura"));
+      if (!isTrashBag) return null;
+
+      const dimension = text.match(/\b(\d{2,3})\s*x\s*(\d{2,3})\b/i);
+      const rollMatch =
+        text.match(/\b(\d+)\s*(?:rolls?|rollos?)\b/i) ||
+        text.match(/\bx\s*(\d+)\s*(?:rolls?|rollos?)\b/i);
+      let rollCount = rollMatch ? Math.round(parseNumber(rollMatch[1])) : 0;
+
+      const comboAfterDimension = dimension
+        ? text.slice(dimension.index + dimension[0].length).match(/\b(\d+)\s*x\s*(\d+)\s*u\b/i)
+        : null;
+      if (!rollCount && comboAfterDimension) {
+        rollCount = Math.round(parseNumber(comboAfterDimension[1]));
+      }
+
+      if (!rollCount && /\brolls?|rollos?\b/i.test(text)) {
+        rollCount = 1;
+      }
+
+      const bagsMatch =
+        text.match(/\bx\s*(\d+)\s*b\b/i) ||
+        text.match(/\b(\d+)\s*b\b/i) ||
+        text.match(/\/\s*(\d+)\s*\//i) ||
+        (comboAfterDimension ? [null, comboAfterDimension[2]] : null) ||
+        text.match(/\bx\s*(\d+)\s*u\b/i);
+      const bagsPerRoll = bagsMatch ? Math.round(parseNumber(bagsMatch[1])) : 0;
+      const parts = [];
+
+      if (rollCount) parts.push(`${rollCount} ${rollCount === 1 ? "rollo" : "rollos"}`);
+      if (dimension) parts.push(`${dimension[1]} x ${dimension[2]}`);
+      if (bagsPerRoll) parts.push(`${bagsPerRoll} bolsas/rollo`);
+
+      if (!parts.length) return null;
+
+      return {
+        count: rollCount || 0,
+        label: parts.join(" · "),
+      };
     }
 
     function formatDecimal(value) {
