@@ -304,6 +304,19 @@
       color: var(--accent);
     }
 
+    .code-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      margin-bottom: 6px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: #eef2f7;
+      color: #334155;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
     .product {
       margin: 4px 0 0;
       font-size: 15px;
@@ -406,7 +419,7 @@
       font-size: 13px;
     }
 
-    td:nth-child(3) {
+    td:nth-child(4) {
       white-space: normal;
       min-width: 280px;
     }
@@ -507,6 +520,7 @@
 
       .summary {
         align-items: flex-start;
+        flex-direction: column;
         justify-content: flex-start;
       }
 
@@ -570,9 +584,9 @@
           <input id="search" type="search" autocomplete="off" placeholder="Producto, marca o codigo">
         </label>
         <label class="field">
-          <span class="field-label">Marca</span>
+          <span class="field-label">Marca/Familia</span>
           <select id="brandFilter" aria-label="Filtrar por marca">
-            <option value="">Todas las marcas</option>
+            <option value="">Todas las marcas/familias</option>
           </select>
         </label>
         <label class="field">
@@ -591,7 +605,7 @@
       </div>
       <div class="quick-filters" id="packageFilters" aria-label="Filtros rapidos">
         <button class="filter-chip active" type="button" data-package-filter="all">Todos</button>
-        <button class="filter-chip" type="button" data-package-filter="caja">Cajas</button>
+        <button class="filter-chip" type="button" data-package-filter="caja">Cajas/Mangas</button>
         <button class="filter-chip" type="button" data-package-filter="unidad">Unidades</button>
       </div>
     </div>
@@ -610,12 +624,13 @@
         <thead>
           <tr>
             <th>Foto</th>
+            <th>Codigo</th>
             <th>Marca</th>
             <th>Producto</th>
+            <th>Formato</th>
             <th>Envase</th>
-            <th class="num">UND X CAJA</th>
             <th class="num">Valor Unit.</th>
-            <th class="num">Total</th>
+            <th class="num">Total Envase</th>
           </tr>
         </thead>
         <tbody id="tableBody"></tbody>
@@ -636,9 +651,7 @@
       address: "Caletera General Velasquez, ex-avenida central 3275, Cerrillos",
       logo: "imagenes/logo-family-market.png",
       placeholderImage: "imagenes/sin-foto.svg",
-      assetVersion: "20260709-fotos-reales-2",
-      dataVersion: "20260710-precios",
-      //priceOverridesUrl:"datos/precios-actualizados-20260710.json",
+      assetVersion: "20260712-formato-stock",
       // Cambia esta linea por la URL CSV publicada desde Google Sheets.
       // Ejemplo: "https://docs.google.com/spreadsheets/d/e/XXXX/pub?gid=0&single=true&output=csv"
       sheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTu4USS_FdOZZU6m2Q8funbi1zlMqU26tqNk0IxN10MJO-y11qT_mJgq42monVrhZif-vslc9w7gIAm/pub?output=csv",
@@ -653,7 +666,7 @@
     const state = {
       products: [],
       filtered: [],
-      visibleCount: 80,
+      visibleCount: 48,
       packageFilter: "all",
     };
 
@@ -737,6 +750,14 @@
       return "";
     }
 
+    function firstPositive(values) {
+      for (const value of values) {
+        const number = parseNumber(value);
+        if (number > 0) return number;
+      }
+      return 0;
+    }
+
     function parseNumber(value) {
       if (typeof value === "number") return value;
       const clean = String(value || "")
@@ -748,35 +769,138 @@
       return Number.isFinite(number) ? number : 0;
     }
 
+    function findHeaderRow(rows) {
+      const expected = ["CODIGO", "NOMBRE", "MARCA", "ENVASE", "STOCK", "P. BRUTO", "P. BOLETA", "P. UNIT.", "P.CAJA"];
+      let bestIndex = 0;
+      let bestScore = 0;
+
+      rows.forEach((row, index) => {
+        const normalizedCells = row.map(normalizeHeader);
+        const score = expected.reduce((total, header) => (
+          total + (normalizedCells.includes(normalizeHeader(header)) ? 1 : 0)
+        ), 0);
+
+        if (score > bestScore) {
+          bestIndex = index;
+          bestScore = score;
+        }
+      });
+
+      return bestScore >= 2 ? bestIndex : 0;
+    }
+
+    function cleanText(value) {
+      return String(value || "").replace(/\s+/g, " ").trim();
+    }
+
     function toProducts(csvText) {
       const rows = parseCsv(csvText);
-      const headers = rows.shift() || [];
-
-      return rows.map((row) => {
+      const headerIndex = findHeaderRow(rows);
+      const headers = rows[headerIndex] || [];
+      const parsedProducts = rows.slice(headerIndex + 1).map((row) => {
         const record = Object.fromEntries(headers.map((header, index) => [header, row[index] || ""]));
-        const unitLabel = getValue(record, ["UND X CAJA", "Unidades", "Unidades por caja", "UNIDAD"]);
-        const unitCount = parseNumber(unitLabel);
-        const unitPrice = parseNumber(getValue(record, ["P. UNIT.", "$ UNITARIO", "Valor Unit.", "Valor Unitario", "Precio Unitario"]));
-        const explicitTotal = parseNumber(getValue(record, ["P.CAJA", "$ X CAJA", "Total", "Total Caja", "Valor Caja"]));
-        const total = explicitTotal || (unitCount ? unitCount * unitPrice : unitPrice);
+        const code = cleanText(getValue(record, ["Codigo", "CODIGO", "COD"]));
+        const productName = cleanText(getValue(record, ["NOMBRE", "Producto", "Descripcion", "Descripcion Producto"]));
+        const packageType = cleanText(getValue(record, ["ENVASE", "Envase"]));
+        const family = cleanText(getValue(record, ["NOMBRE FAMILIA", "Familia", "Categoria", "Categoria Producto"]));
+        const stockRaw = getValue(record, ["Stock", "STOCK", "Existencia", "Existencias", "Disponible", "Disponibles", "Saldo", "Inventario", "Cantidad Stock", "Bodega"]);
+        const stock = stockRaw === "" ? null : parseNumber(stockRaw);
+        const format = inferProductFormat(productName);
+        const explicitUnitCount = firstPositive([
+          getValue(record, ["UND X CAJA", "Unidades", "Unidades por caja"]),
+          getValue(record, ["CONTENIDO", "Contenido"]),
+        ]);
+        const unitCount = format.count || explicitUnitCount || 1;
+        const total = firstPositive([
+          getValue(record, ["P.CAJA", "$ X CAJA", "Total", "Total Caja", "Valor Caja"]),
+          getValue(record, ["P. BOLETA", "P BOLETA", "Precio Boleta"]),
+          getValue(record, ["P. BRUTO", "P BRUTO", "Precio Bruto", "Precio"]),
+        ]);
+        const explicitUnitPrice = firstPositive([
+          getValue(record, ["P. UNIT.", "$ UNITARIO", "Valor Unit.", "Valor Unitario", "Precio Unitario"]),
+        ]);
+        const unitPrice = explicitUnitPrice || (unitCount > 1 ? Math.round(total / unitCount) : total);
 
         return {
-          code: getValue(record, ["Codigo", "CODIGO", "COD"]),
-          brand: getValue(record, ["MARCA", "Marca"]),
-          product: getValue(record, ["NOMBRE", "Producto", "Descripcion", "Descripcion Producto"]),
-          packageType: getValue(record, ["ENVASE", "Envase"]),
-          image: getValue(record, ["Imagen", "Foto", "URL Imagen", "URL Foto", "Image"]),
-          unitLabel,
+          code,
+          brand: cleanText(getValue(record, ["MARCA", "Marca"])) || family,
+          product: productName,
+          packageType,
+          image: cleanText(getValue(record, ["Imagen", "Foto", "URL Imagen", "URL Foto", "Image"])),
+          unitCount,
+          unitLabel: unitCount ? String(unitCount) : "",
+          formatLabel: format.label || (unitCount > 1 ? `${unitCount} unid.` : ""),
           unitPrice,
           total,
+          stock,
+          slug: slugify(`${code} ${productName}`),
         };
-      }).filter((product) => product.brand || product.product);
+      }).filter((product) => {
+        const hasInfo = product.code || product.brand || product.product;
+        const hasPrice = product.total > 0 || product.unitPrice > 0;
+        const hasStock = product.stock === null || product.stock > 0;
+        return hasInfo && hasPrice && hasStock;
+      });
+
+      const codeCounts = parsedProducts.reduce((counts, product) => {
+        if (product.code) counts[product.code] = (counts[product.code] || 0) + 1;
+        return counts;
+      }, {});
+
+      return parsedProducts.map((product) => ({
+        ...product,
+        duplicateCode: Boolean(product.code && codeCounts[product.code] > 1),
+      }));
+    }
+
+    function inferProductFormat(productName) {
+      const text = cleanText(productName);
+      const pattern = /(\d+(?:[.,]\d+)?)\s*x\s*(\d+(?:[.,]\d+)?)\s*(kilos?|kilo|kg|kl|k|grs?\.?|gramos?|g|gg|ml|cc|lts?\.?|lt|litros?)?/i;
+      const match = text.match(pattern);
+
+      if (match) {
+        const count = Math.round(parseNumber(match[1]));
+        const size = formatDecimal(match[2]);
+        const unit = normalizeUnit(match[3]);
+        const sizeLabel = unit ? `${size} ${unit}` : size;
+        return {
+          count: count || 0,
+          label: `${count} x ${sizeLabel}`,
+        };
+      }
+
+      const single = text.match(/(\d+(?:[.,]\d+)?)\s*(kilos?|kilo|kg|kl|grs?\.?|gramos?|g|ml|cc|lts?\.?|lt|litros?)\b/i);
+      if (single) {
+        const size = formatDecimal(single[1]);
+        const unit = normalizeUnit(single[2]);
+        return {
+          count: 1,
+          label: `${size}${unit ? ` ${unit}` : ""}`,
+        };
+      }
+
+      return { count: 0, label: "" };
+    }
+
+    function formatDecimal(value) {
+      return String(value || "").replace(",", ".").replace(/\.0+$/, "");
+    }
+
+    function normalizeUnit(unit) {
+      const normalized = normalizeHeader(unit);
+      if (!normalized) return "";
+      if (["k", "kg", "kl", "kilo", "kilos"].includes(normalized)) return "KG";
+      if (["g", "gr", "grs", "gramo", "gramos", "gg"].includes(normalized)) return "GRS";
+      if (normalized === "cc") return "CC";
+      if (normalized === "ml") return "ML";
+      if (["lt", "lts", "litro", "litros"].includes(normalized)) return "LT";
+      return String(unit || "").toUpperCase().replace(/\./g, "");
     }
 
     function renderBrandFilter(products) {
       const selected = elements.brandFilter.value;
       const brands = [...new Set(products.map((product) => product.brand).filter(Boolean))].sort();
-      elements.brandFilter.innerHTML = '<option value="">Todas las marcas</option>';
+      elements.brandFilter.innerHTML = '<option value="">Todas las marcas/familias</option>';
       brands.forEach((brand) => {
         const option = document.createElement("option");
         option.value = brand;
@@ -795,13 +919,14 @@
         product.product,
         product.packageType,
         product.unitLabel,
+        product.formatLabel,
       ].join(" ");
-      const packageText = normalizeText(`${product.packageType} ${product.unitLabel}`);
-      const unitCount = parseNumber(product.unitLabel);
+      const packageText = normalizeText(`${product.packageType} ${product.unitLabel} ${product.formatLabel}`);
+      const unitCount = product.unitCount || parseNumber(product.unitLabel);
       const packageMatches =
         state.packageFilter === "all" ||
-        (state.packageFilter === "caja" && (packageText.includes("caja") || unitCount > 1)) ||
-        (state.packageFilter === "unidad" && (packageText.includes("unidad") || unitCount === 1));
+        (state.packageFilter === "caja" && (packageText.includes("caja") || packageText.includes("manga") || packageText.includes("saco") || unitCount > 1)) ||
+        (state.packageFilter === "unidad" && (packageText.includes("unidad") || packageText.includes("unida") || packageText.includes("und")) && unitCount <= 1);
 
       return (!query || normalizeText(searchable).includes(query)) && (!brand || product.brand === brand) && packageMatches;
     }
@@ -836,21 +961,22 @@
       article.className = "item";
       article.innerHTML = `
         <div class="photo">
-          <img src="${escapeAttribute(imageSource(product))}" alt="${escapeAttribute(product.product || "Producto")}" loading="lazy" onerror="this.onerror=null;this.src='${escapeAttribute(CONFIG.placeholderImage)}';">
+          <img src="${escapeAttribute(imageSource(product))}" data-fallbacks="${escapeAttribute(imageFallbacks(product).join("|"))}" alt="${escapeAttribute(product.product || "Producto")}" loading="lazy" onerror="nextImage(this)">
         </div>
         <div class="item-main">
           <div>
+            ${product.code ? `<div class="code-chip">Codigo ${escapeHtml(product.code)}</div>` : ""}
             <div class="brand">${escapeHtml(product.brand)}</div>
             <h2 class="product">${escapeHtml(product.product)}</h2>
             <div class="meta">
               ${pill(product.packageType)}
-              ${pill(product.unitLabel)}
+              ${pill(product.formatLabel || product.unitLabel)}
             </div>
           </div>
           <div class="prices">
-            <div class="price price-main"><span>Total caja</span><strong>${formatMoney(product.total)}</strong></div>
+            <div class="price price-main"><span>Total envase</span><strong>${formatMoney(product.total)}</strong></div>
             <div class="price"><span>Unitario</span><strong>${formatMoney(product.unitPrice)}</strong></div>
-            <div class="price"><span>Unid. caja</span><strong>${escapeHtml(product.unitLabel || "-")}</strong></div>
+            <div class="price"><span>Unid. envase</span><strong>${escapeHtml(product.unitLabel || "-")}</strong></div>
           </div>
         </div>
       `;
@@ -860,11 +986,12 @@
     function productRow(product) {
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td><div class="thumb"><img src="${escapeAttribute(imageSource(product))}" alt="${escapeAttribute(product.product || "Producto")}" loading="lazy" onerror="this.onerror=null;this.src='${escapeAttribute(CONFIG.placeholderImage)}';"></div></td>
+        <td><div class="thumb"><img src="${escapeAttribute(imageSource(product))}" data-fallbacks="${escapeAttribute(imageFallbacks(product).join("|"))}" alt="${escapeAttribute(product.product || "Producto")}" loading="lazy" onerror="nextImage(this)"></div></td>
+        <td>${escapeHtml(product.code)}</td>
         <td>${escapeHtml(product.brand)}</td>
         <td>${escapeHtml(product.product)}</td>
+        <td>${escapeHtml(product.formatLabel || "-")}</td>
         <td>${escapeHtml(product.packageType)}</td>
-        <td class="num">${escapeHtml(product.unitLabel)}</td>
         <td class="num">${formatMoney(product.unitPrice)}</td>
         <td class="num">${formatMoney(product.total)}</td>
       `;
@@ -880,46 +1007,64 @@
     }
 
     function imageSource(product) {
+      return imageCandidates(product)[0];
+    }
+
+    function imageFallbacks(product) {
+      return imageCandidates(product).slice(1);
+    }
+
+    function imageCandidates(product) {
+      const candidates = [];
       const code = String(product.code || "").trim();
-      if (product.image) return product.image;
-      if (code) return versionedAsset(`imagenes/productos/${code}.jpg`);
-      return CONFIG.placeholderImage;
+      const nameSlug = slugify(product.product);
+      const codeNameSlug = slugify(`${code} ${product.product}`);
+      const exactName = safeFileName(product.product);
+
+      if (product.image) candidates.push(product.image);
+
+      const codePaths = code ? [`imagenes/productos/${code}.jpg`] : [];
+      const namePaths = [
+        code && nameSlug ? `imagenes/productos/${code}-${nameSlug}.jpg` : "",
+        codeNameSlug ? `imagenes/productos/${codeNameSlug}.jpg` : "",
+        nameSlug ? `imagenes/productos/${nameSlug}.jpg` : "",
+        exactName ? `imagenes/productos/${exactName}.jpg` : "",
+      ].filter(Boolean);
+
+      const localPaths = product.duplicateCode ? [...namePaths, ...codePaths] : [...codePaths, ...namePaths];
+      candidates.push(...localPaths.map(versionedAsset));
+      candidates.push(versionedAsset(CONFIG.placeholderImage));
+
+      return [...new Set(candidates)];
+    }
+
+    function nextImage(image) {
+      const fallbacks = (image.dataset.fallbacks || "").split("|").filter(Boolean);
+      const next = fallbacks.shift();
+      image.dataset.fallbacks = fallbacks.join("|");
+
+      if (next) {
+        image.src = next;
+      } else {
+        image.onerror = null;
+      }
+    }
+
+    function slugify(value) {
+      return normalizeText(value)
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    }
+
+    function safeFileName(value) {
+      return cleanText(value)
+        .replace(/[\\/:*?"<>|#%{}$!@+=`]/g, "-")
+        .replace(/\s+/g, " ")
+        .trim();
     }
 
     function versionedAsset(path) {
       return `${path}?v=${encodeURIComponent(CONFIG.assetVersion)}`;
-    }
-
-    function versionedData(path) {
-      return `${path}?v=${encodeURIComponent(CONFIG.dataVersion)}`;
-    }
-
-    async function loadPriceOverrides() {
-      if (!CONFIG.priceOverridesUrl) return {};
-
-      try {
-        const response = await fetch(versionedData(CONFIG.priceOverridesUrl), { cache: "no-store" });
-        if (!response.ok) throw new Error(`No se pudo leer precios extra (${response.status}).`);
-        const data = await response.json();
-        return data.prices || {};
-      } catch (error) {
-        console.warn("No se pudieron aplicar precios extra.", error);
-        return {};
-      }
-    }
-
-    function applyPriceOverrides(products, overrides) {
-      return products.map((product) => {
-        const code = String(product.code || "").trim();
-        const override = overrides[code];
-        if (!override) return product;
-
-        return {
-          ...product,
-          unitPrice: parseNumber(override.unitPrice),
-          total: parseNumber(override.total),
-        };
-      });
     }
 
     function escapeHtml(value) {
@@ -957,10 +1102,8 @@
         if (!response.ok) throw new Error(`No se pudo leer la planilla (${response.status}).`);
 
         const csvText = await response.text();
-        const products = toProducts(csvText);
-        const priceOverrides = await loadPriceOverrides();
-        state.products = applyPriceOverrides(products, priceOverrides);
-        state.visibleCount = 80;
+        state.products = toProducts(csvText);
+        state.visibleCount = 48;
         renderBrandFilter(state.products);
         renderProducts();
 
@@ -977,15 +1120,15 @@
     }
 
     elements.search.addEventListener("input", () => {
-      state.visibleCount = 80;
+      state.visibleCount = 48;
       renderProducts();
     });
     elements.brandFilter.addEventListener("change", () => {
-      state.visibleCount = 80;
+      state.visibleCount = 48;
       renderProducts();
     });
     elements.sortOrder.addEventListener("change", () => {
-      state.visibleCount = 80;
+      state.visibleCount = 48;
       renderProducts();
     });
     elements.packageFilters.addEventListener("click", (event) => {
@@ -996,7 +1139,7 @@
       elements.packageFilters.querySelectorAll(".filter-chip").forEach((chip) => {
         chip.classList.toggle("active", chip === button);
       });
-      state.visibleCount = 80;
+      state.visibleCount = 48;
       renderProducts();
     });
     elements.refresh.addEventListener("click", loadProducts);
