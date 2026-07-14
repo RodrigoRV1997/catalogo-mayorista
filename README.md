@@ -10,7 +10,11 @@ Esta carpeta contiene la version actual del catalogo conectado a Google Sheets.
 - `imagenes/sin-foto.svg`
 - `imagenes/productos/`
 
-La carpeta `imagenes/productos/` contiene las fotos disponibles. La forma mas simple es usar el codigo interno del producto como nombre:
+La carpeta `datos/` ya no se usa. Los precios y el stock salen directamente desde la planilla publicada configurada dentro de `index.html`.
+
+## Fotos de productos
+
+La forma mas simple es usar el codigo interno del producto como nombre:
 
 ```text
 imagenes/productos/3706.jpg
@@ -27,7 +31,7 @@ Si un codigo se repite en productos distintos, usa mejor el nombre o `codigo-nom
 
 ## Datos del catalogo
 
-Los precios se cargan desde la planilla publicada de Google Sheets configurada dentro de `index.html`.
+Los precios y el stock se cargan desde la planilla publicada de Google Sheets configurada dentro de `index.html`.
 
 Si un producto no tiene foto en `imagenes/productos/`, el catalogo muestra `imagenes/sin-foto.svg`.
 
@@ -41,7 +45,7 @@ El catalogo intenta leer formatos desde el nombre del producto. Ejemplos:
 
 ```text
 AZUCAR IANSA 20 X 1 KG -> 20 x 1 KG
-BOLSA BASURA VIRUTEX 24ROLL 80X110 X10B -> 24 rollos · 80 x 110 · 10 bolsas/rollo
+BOLSA BASURA VIRUTEX 24ROLL 80X110 X10B -> 24 rollos - 80 x 110 - 10 bolsas/rollo
 ```
 
 En bolsas de basura, medidas como `80X110` se tratan como dimensiones, no como cantidad.
