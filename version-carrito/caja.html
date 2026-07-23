@@ -755,7 +755,7 @@
           if (missing) notes.push(`${missing} producto${missing === 1 ? " no se encontro" : "s no se encontraron"}`);
           showMessage(`Revisa el pedido: ${notes.join(", ")}.`, "warning");
         } else {
-          showMessage("Pedido verificado con los precios y el stock actuales de Google Sheets.", "success");
+          showMessage("", "");
         }
       } catch (error) {
         console.error(error);
